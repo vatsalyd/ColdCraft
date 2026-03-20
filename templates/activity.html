@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Activity — ColdCraft{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h2>Activity Log</h2>
+    <p>History of all outreach actions</p>
+</div>
+
+{% if logs %}
+<div class="table-container">
+    <table>
+        <thead><tr><th>Time</th><th>Action</th><th>Contact</th><th>Company</th><th>Subject</th><th>Status</th></tr></thead>
+        <tbody>
+        {% for log in logs %}
+        <tr>
+            <td class="text-muted text-sm" style="white-space:nowrap;">{{ log.created_at }}</td>
+            <td>{{ log.action | replace('_', ' ') | title }}</td>
+            <td>{{ log.contact_name or log.contact_email or '—' }}</td>
+            <td>{{ log.company_name or '—' }}</td>
+            <td class="truncate">{{ log.subject or '—' }}</td>
+            <td><span class="badge badge-{{ log.status }}">{{ log.status }}</span></td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="card"><div class="empty-state"><div class="empty-icon">📋</div><h3>No Activity Yet</h3><p>Your outreach history will appear here.</p></div></div>
+{% endif %}
+{% endblock %}

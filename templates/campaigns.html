@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Campaigns — ColdCraft{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h2>Campaigns</h2>
+    <p>Organize and track your outreach campaigns</p>
+</div>
+
+<!-- Create -->
+<div class="card mb-4">
+    <h3 style="margin-bottom:16px;font-size:1rem;">➕ New Campaign</h3>
+    <form method="POST" action="{{ url_for('create_campaign') }}">
+        <div class="flex gap-4 items-center" style="flex-wrap:wrap;">
+            <input type="text" name="name" placeholder="Campaign name" required style="max-width:300px;">
+            <select name="type" style="max-width:150px;">
+                <option value="email">Email</option>
+                <option value="linkedin">LinkedIn</option>
+                <option value="github">GitHub</option>
+            </select>
+            <button type="submit" class="btn btn-primary">Create</button>
+        </div>
+    </form>
+</div>
+
+{% if campaigns %}
+<div class="table-container">
+    <table>
+        <thead><tr><th>Campaign</th><th>Type</th><th>Status</th><th>Progress</th><th>Created</th></tr></thead>
+        <tbody>
+        {% for c in campaigns %}
+        <tr>
+            <td><strong>{{ c.name }}</strong></td>
+            <td>{{ c.type | title }}</td>
+            <td><span class="badge badge-{{ c.status }}">{{ c.status | title }}</span></td>
+            <td>{{ c.sent_count }} / {{ c.total_contacts }}</td>
+            <td class="text-muted text-sm">{{ c.created_at }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="card"><div class="empty-state"><div class="empty-icon">📁</div><h3>No Campaigns Yet</h3><p>Create a campaign to organize your outreach efforts.</p></div></div>
+{% endif %}
+{% endblock %}
