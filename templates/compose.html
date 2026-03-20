@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Compose — ColdCraft{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h2>Compose Email</h2>
+    <p>Generate and send personalized internship pitches</p>
+</div>
+
+<!-- Select Contact -->
+<div class="card mb-4">
+    <h3 style="margin-bottom:16px;font-size:1rem;">📇 Select Contact</h3>
+    <form method="GET" action="{{ url_for('compose') }}">
+        <div class="flex gap-4 items-center" style="flex-wrap:wrap;">
+            <select name="contact_id" style="max-width:400px;">
+                <option value="">-- Select a contact --</option>
+                {% for c in contacts %}
+                <option value="{{ c.id }}" {{ 'selected' if draft and draft.contact_id == c.id }}>{{ c.name or c.email }} — {{ c.company_name or 'Unknown' }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn btn-primary">🤖 Generate Email</button>
+        </div>
+    </form>
+</div>
+
+{% if draft and draft.get('error') %}
+<div class="card mb-4"><div class="flash flash-error">{{ draft.error }}</div></div>
+{% elif draft %}
+<!-- Email Preview & Edit -->
+<form method="POST" action="{{ url_for('send_email') }}">
+    <input type="hidden" name="contact_id" value="{{ draft.contact_id }}">
+    <input type="hidden" name="campaign_id" value="{{ campaign_id or '' }}">
+
+    <div class="card mb-4">
+        <h3 style="margin-bottom:16px;font-size:1rem;">✉️ Email to {{ draft.contact_name }} at {{ draft.company_name }}</h3>
+
+        <div class="form-group">
+            <label>To</label>
+            <input type="email" name="to_email" value="{{ draft.contact_email }}" required>
+        </div>
+        <div class="form-group">
+            <label>Subject</label>
+            <input type="text" name="subject" value="{{ draft.subject }}" required>
+        </div>
+        <div class="form-group">
+            <label>Body <span class="text-muted">(edit before sending)</span></label>
+            <textarea name="body" rows="16" required>{{ draft.body }}</textarea>
+        </div>
+
+        <div class="flex gap-4">
+            <button type="submit" class="btn btn-success">📤 Send Email</button>
+            <a href="{{ url_for('compose', contact_id=draft.contact_id) }}" class="btn btn-secondary">🔄 Regenerate</a>
+        </div>
+    </div>
+</form>
+{% endif %}
+{% endblock %}

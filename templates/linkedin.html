@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}LinkedIn — ColdCraft{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h2>LinkedIn Drafts</h2>
+    <p>AI-generated comment drafts for relevant posts — copy and paste manually</p>
+</div>
+
+<div class="action-bar">
+    <form method="POST" action="{{ url_for('generate_linkedin_drafts') }}">
+        <div class="flex gap-4 items-center">
+            <input type="number" name="num_posts" value="5" min="1" max="10" style="width:80px;">
+            <button type="submit" class="btn btn-primary">🤖 Generate Drafts</button>
+        </div>
+    </form>
+</div>
+
+{% if drafts %}
+{% for d in drafts %}
+<div class="card comment-card">
+    <div class="post-info">
+        💼 <strong>{{ d.post_author or 'LinkedIn Post' }}</strong>
+        {% if d.post_url %} · <a href="{{ d.post_url }}" target="_blank">Open Post ↗</a>{% endif %}
+    </div>
+    {% if d.post_summary %}<p class="text-sm text-muted mb-4">{{ d.post_summary[:200] }}</p>{% endif %}
+    <div class="draft-text" id="draft-{{ d.id }}" onclick="copyText('draft-{{ d.id }}')" title="Click to copy">
+        {{ d.comment_draft }}
+    </div>
+    <div class="comment-actions">
+        <button onclick="copyText('draft-{{ d.id }}')" class="btn btn-sm btn-primary">📋 Copy</button>
+        <form method="POST" action="{{ url_for('mark_used', draft_id=d.id) }}" style="display:inline;"><button type="submit" class="btn btn-sm btn-success">✅ Used</button></form>
+        <form method="POST" action="{{ url_for('mark_skipped', draft_id=d.id) }}" style="display:inline;"><button type="submit" class="btn btn-sm btn-secondary">⏭ Skip</button></form>
+    </div>
+</div>
+{% endfor %}
+{% else %}
+<div class="card"><div class="empty-state"><div class="empty-icon">💬</div><h3>No Drafts Yet</h3><p>Click "Generate Drafts" to find relevant LinkedIn posts and create comment drafts.</p></div></div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Contacts — ColdCraft{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h2>Contacts</h2>
+    <p>Manage HR contacts and import from CSV or Google Sheets</p>
+</div>
+
+<!-- Import -->
+<div class="card mb-4">
+    <h3 style="margin-bottom:16px;font-size:1rem;">📥 Import Contacts</h3>
+    <form method="POST" action="{{ url_for('import_contacts') }}" enctype="multipart/form-data">
+        <div class="flex gap-4 items-center" style="flex-wrap:wrap;">
+            <input type="file" name="csv_file" accept=".csv" style="max-width:300px;">
+            <span class="text-muted">or</span>
+            <input type="url" name="sheet_url" placeholder="Google Sheet URL" style="max-width:350px;">
+            <button type="submit" class="btn btn-primary">Import</button>
+        </div>
+        <p class="text-muted text-sm mt-4">CSV columns: Company, Website, HR Name, HR Email, Role, Notes</p>
+    </form>
+</div>
+
+{% if contacts %}
+<div class="table-container">
+    <table>
+        <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Company</th><th>Verified</th><th>Source</th><th>Actions</th></tr></thead>
+        <tbody>
+        {% for c in contacts %}
+        <tr>
+            <td>{{ c.name or '—' }}</td>
+            <td class="text-mono">{{ c.email or '—' }}</td>
+            <td>{{ c.role or '—' }}</td>
+            <td>{{ c.company_name or '—' }}</td>
+            <td>
+                {% if c.verified %}<span class="badge badge-verified">✅ {{ c.verification_score }}</span>
+                {% elif c.verification_score %}<span class="badge badge-caution">⚠️ {{ c.verification_score }}</span>
+                {% else %}<span class="badge badge-pending">—</span>{% endif %}
+            </td>
+            <td class="text-muted text-sm">{{ c.source }}</td>
+            <td>
+                <div class="flex gap-2">
+                    {% if c.email %}<a href="{{ url_for('compose', contact_id=c.id) }}" class="btn btn-sm btn-secondary">✉️ Email</a>{% endif %}
+                    <form method="POST" action="{{ url_for('delete_contact', contact_id=c.id) }}" style="display:inline;" onsubmit="return confirmAction('Delete this contact?')">
+                        <button type="submit" class="btn btn-sm btn-danger">✕</button>
+                    </form>
+                </div>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="card"><div class="empty-state"><div class="empty-icon">📇</div><h3>No Contacts Yet</h3><p>Import a CSV or Google Sheet to get started.</p></div></div>
+{% endif %}
+{% endblock %}

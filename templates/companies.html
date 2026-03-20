@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Companies — ColdCraft{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h2>Companies</h2>
+    <p>Research and verify target companies</p>
+</div>
+
+<div class="action-bar">
+    <form method="POST" action="{{ url_for('research_all') }}" style="display:inline;"><button type="submit" class="btn btn-primary">🔍 Research All</button></form>
+    <form method="POST" action="{{ url_for('verify_all') }}" style="display:inline;"><button type="submit" class="btn btn-secondary">✅ Verify All</button></form>
+</div>
+
+{% if companies %}
+<div class="table-container">
+    <table>
+        <thead><tr><th>Company</th><th>Website</th><th>Contacts</th><th>Verified</th><th>Score</th><th>Actions</th></tr></thead>
+        <tbody>
+        {% for c in companies %}
+        <tr>
+            <td><strong>{{ c.name }}</strong></td>
+            <td>{% if c.website %}<a href="{{ c.website if c.website.startswith('http') else 'https://' + c.website }}" target="_blank" class="truncate">{{ c.website }}</a>{% else %}—{% endif %}</td>
+            <td>{{ c.contact_count }}</td>
+            <td>
+                {% if c.verified %}<span class="badge badge-verified">✅ Verified</span>
+                {% elif c.verification_score and c.verification_score > 0 %}<span class="badge badge-caution">⚠️ Caution</span>
+                {% else %}<span class="badge badge-pending">Unchecked</span>{% endif %}
+            </td>
+            <td>{{ c.verification_score or '—' }}</td>
+            <td>
+                <div class="flex gap-2">
+                    <form method="POST" action="{{ url_for('research_company', company_id=c.id) }}" style="display:inline;"><button type="submit" class="btn btn-sm btn-secondary">🔍</button></form>
+                    <form method="POST" action="{{ url_for('verify_company', company_id=c.id) }}" style="display:inline;"><button type="submit" class="btn btn-sm btn-secondary">✅</button></form>
+                </div>
+            </td>
+        </tr>
+        {% if c.research_summary %}
+        <tr><td colspan="6" style="padding:8px 16px 16px;"><div style="background:var(--bg-input);padding:12px 16px;border-radius:var(--radius-sm);font-size:0.85rem;color:var(--text-secondary);border-left:3px solid var(--accent);">{{ c.research_summary }}</div></td></tr>
+        {% endif %}
+        {% if c.verification_notes %}
+        <tr><td colspan="6" style="padding:0 16px 16px;"><div style="font-size:0.8rem;color:var(--text-muted);white-space:pre-line;">{{ c.verification_notes }}</div></td></tr>
+        {% endif %}
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="card"><div class="empty-state"><div class="empty-icon">🏢</div><h3>No Companies Yet</h3><p>Import contacts to automatically create company entries.</p></div></div>
+{% endif %}
+{% endblock %}

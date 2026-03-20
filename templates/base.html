@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}ColdCraft{% endblock %}</title>
+    <meta name="description" content="AI-powered outreach engine for landing internships">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧊</text></svg>">
+</head>
+<body>
+    <div class="app-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <div class="logo">❄</div>
+                <h1>ColdCraft</h1>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="{{ url_for('dashboard') }}" class="nav-link {{ 'active' if request.endpoint == 'dashboard' }}">
+                    <span class="icon">📊</span>
+                    <span>Dashboard</span>
+                </a>
+                <a href="{{ url_for('profile') }}" class="nav-link {{ 'active' if request.endpoint == 'profile' }}">
+                    <span class="icon">👤</span>
+                    <span>Profile</span>
+                </a>
+
+                <div class="nav-section">Outreach</div>
+                <a href="{{ url_for('contacts') }}" class="nav-link {{ 'active' if request.endpoint == 'contacts' }}">
+                    <span class="icon">📇</span>
+                    <span>Contacts</span>
+                </a>
+                <a href="{{ url_for('companies') }}" class="nav-link {{ 'active' if request.endpoint == 'companies' }}">
+                    <span class="icon">🏢</span>
+                    <span>Companies</span>
+                </a>
+                <a href="{{ url_for('compose') }}" class="nav-link {{ 'active' if request.endpoint == 'compose' }}">
+                    <span class="icon">✉️</span>
+                    <span>Compose</span>
+                </a>
+
+                <div class="nav-section">Engage</div>
+                <a href="{{ url_for('linkedin') }}" class="nav-link {{ 'active' if request.endpoint == 'linkedin' }}">
+                    <span class="icon">💼</span>
+                    <span>LinkedIn</span>
+                </a>
+                <a href="{{ url_for('github') }}" class="nav-link {{ 'active' if request.endpoint == 'github' }}">
+                    <span class="icon">🐙</span>
+                    <span>GitHub</span>
+                </a>
+
+                <div class="nav-section">History</div>
+                <a href="{{ url_for('activity') }}" class="nav-link {{ 'active' if request.endpoint == 'activity' }}">
+                    <span class="icon">📋</span>
+                    <span>Activity</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main -->
+        <main class="main-content">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                <div class="flash flash-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% endwith %}
+
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

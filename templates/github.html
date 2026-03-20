@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}GitHub — ColdCraft{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h2>GitHub Outreach</h2>
+    <p>Discover repos and engagement opportunities in your field</p>
+</div>
+
+<div class="action-bar">
+    <form method="POST" action="{{ url_for('discover_github') }}"><button type="submit" class="btn btn-primary">🔍 Discover Repos</button></form>
+</div>
+
+{% if opportunities %}
+{% for repo in opportunities %}
+<div class="card repo-card">
+    <div class="repo-name"><a href="{{ repo.url }}" target="_blank">{{ repo.name }}</a></div>
+    <div class="repo-desc">{{ repo.description or 'No description' }}</div>
+    <div class="repo-meta">
+        <span>⭐ {{ repo.stars }}</span>
+        <span>🔤 {{ repo.language or '—' }}</span>
+        <span>🐛 {{ repo.open_issues }} issues</span>
+        <span>📌 {{ repo.interest }}</span>
+    </div>
+    {% if repo.suggestion %}<div class="suggestion">💡 {{ repo.suggestion }}</div>{% endif %}
+</div>
+{% endfor %}
+{% elif opportunities is not none %}
+<div class="card"><div class="empty-state"><div class="empty-icon">🐙</div><h3>No Repos Found</h3><p>Make sure you've uploaded your resume so we know your interests.</p></div></div>
+{% else %}
+<div class="card"><div class="empty-state"><div class="empty-icon">🐙</div><h3>Discover GitHub Opportunities</h3><p>Click above to find repos matching your skills and interests.</p></div></div>
+{% endif %}
+{% endblock %}

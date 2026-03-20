@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — ColdCraft{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Dashboard</h2>
+    <p>Your outreach at a glance</p>
+</div>
+
+<!-- Stats Grid -->
+<div class="card-grid">
+    <div class="card stat-card">
+        <div class="stat-icon">🏢</div>
+        <div class="stat-value">{{ stats.total_companies }}</div>
+        <div class="stat-label">Companies</div>
+    </div>
+    <div class="card stat-card">
+        <div class="stat-icon">📇</div>
+        <div class="stat-value">{{ stats.total_contacts }}</div>
+        <div class="stat-label">Contacts</div>
+    </div>
+    <div class="card stat-card">
+        <div class="stat-icon">✉️</div>
+        <div class="stat-value">{{ stats.emails_sent }}</div>
+        <div class="stat-label">Emails Sent</div>
+    </div>
+    <div class="card stat-card">
+        <div class="stat-icon">✅</div>
+        <div class="stat-value">{{ stats.verified_companies }}</div>
+        <div class="stat-label">Verified</div>
+    </div>
+    <div class="card stat-card">
+        <div class="stat-icon">💬</div>
+        <div class="stat-value">{{ stats.linkedin_drafts }}</div>
+        <div class="stat-label">LinkedIn Drafts</div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="card mb-4">
+    <h3 style="margin-bottom: 16px; font-size: 1rem;">Quick Actions</h3>
+    <div class="flex gap-4" style="flex-wrap: wrap;">
+        <a href="{{ url_for('profile') }}" class="btn btn-primary">👤 Upload Resume</a>
+        <a href="{{ url_for('contacts') }}" class="btn btn-secondary">📥 Import Contacts</a>
+        <a href="{{ url_for('compose') }}" class="btn btn-secondary">✉️ Compose Email</a>
+        <a href="{{ url_for('linkedin') }}" class="btn btn-secondary">💬 LinkedIn Drafts</a>
+        <a href="{{ url_for('github') }}" class="btn btn-secondary">🐙 GitHub Discover</a>
+    </div>
+</div>
+
+{% if not profile %}
+<!-- Getting Started -->
+<div class="card">
+    <div class="empty-state">
+        <div class="empty-icon">🚀</div>
+        <h3>Welcome to ColdCraft!</h3>
+        <p>Get started by uploading your resume. ColdCraft will extract your skills and interests to personalize every outreach.</p>
+        <a href="{{ url_for('profile') }}" class="btn btn-primary">Upload Resume</a>
+    </div>
+</div>
+{% endif %}
+
+{% if logs %}
+<!-- Recent Activity -->
+<div class="card">
+    <h3 style="margin-bottom: 16px; font-size: 1rem;">Recent Activity</h3>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Action</th>
+                    <th>Contact</th>
+                    <th>Company</th>
+                    <th>Status</th>
+                    <th>Time</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}
+                <tr>
+                    <td>{{ log.action | replace('_', ' ') | title }}</td>
+                    <td>{{ log.contact_name or '—' }}</td>
+                    <td>{{ log.company_name or '—' }}</td>
+                    <td><span class="badge badge-{{ log.status }}">{{ log.status }}</span></td>
+                    <td class="text-muted text-sm">{{ log.created_at }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
