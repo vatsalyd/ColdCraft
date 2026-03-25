@@ -53,6 +53,7 @@ def init_db():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT,
             email TEXT,
+            phone TEXT,
             role TEXT,
             company_id INTEGER,
             linkedin_url TEXT,

@@ -8,11 +8,32 @@ from db import execute_db, query_db
 
 
 def extract_text_from_pdf(pdf_path):
-    """Extract all text from a PDF file."""
+    """Extract all text from a PDF file using multiple methods."""
     doc = fitz.open(pdf_path)
+    
+    # Method 1: Standard text extraction
     text = ""
     for page in doc:
-        text += page.get_text()
+        text += page.get_text("text")
+    
+    # Method 2: If standard fails, try extracting text blocks
+    if not text.strip():
+        for page in doc:
+            blocks = page.get_text("blocks")
+            for block in blocks:
+                if block[6] == 0:  # text block (not image)
+                    text += block[4] + "\n"
+    
+    # Method 3: Try raw dict extraction
+    if not text.strip():
+        for page in doc:
+            page_dict = page.get_text("dict")
+            for block in page_dict.get("blocks", []):
+                for line in block.get("lines", []):
+                    for span in line.get("spans", []):
+                        text += span.get("text", "") + " "
+                    text += "\n"
+    
     doc.close()
     return text.strip()
 

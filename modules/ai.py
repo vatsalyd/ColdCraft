@@ -1,34 +1,56 @@
-"""ColdCraft — Gemini Pro AI wrapper."""
+"""ColdCraft — AI wrapper using OpenRouter API (OpenAI-compatible)."""
 
 import json
-import google.generativeai as genai
+import time
+import requests
 from config import Config
 
 
-# Configure Gemini
-_model = None
+OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 
 
-def _get_model():
-    """Lazy-init the Gemini model."""
-    global _model
-    if _model is None:
-        genai.configure(api_key=Config.GEMINI_API_KEY)
-        _model = genai.GenerativeModel("gemini-2.5-pro-preview-05-06")
-    return _model
+def _call_openrouter(messages, temperature=0.7, max_tokens=2048):
+    """Call OpenRouter API with retry on rate limit."""
+    if not Config.OPENROUTER_API_KEY:
+        raise ValueError("OPENROUTER_API_KEY is not set in .env file")
+
+    headers = {
+        "Authorization": f"Bearer {Config.OPENROUTER_API_KEY}",
+        "Content-Type": "application/json",
+        "HTTP-Referer": "http://localhost:5000",
+        "X-Title": "ColdCraft",
+    }
+    payload = {
+        "model": Config.OPENROUTER_MODEL,
+        "messages": messages,
+        "temperature": temperature,
+        "max_tokens": max_tokens,
+    }
+
+    for attempt in range(4):
+        resp = requests.post(OPENROUTER_URL, headers=headers, json=payload, timeout=60)
+        if resp.status_code == 429:
+            wait = (attempt + 1) * 15
+            print(f"[ColdCraft] Rate limited, waiting {wait}s...")
+            time.sleep(wait)
+            continue
+        if resp.status_code != 200:
+            error_detail = resp.text[:500]
+            print(f"[ColdCraft] API error {resp.status_code}: {error_detail}")
+            raise RuntimeError(f"OpenRouter API error ({resp.status_code}): {error_detail}")
+        data = resp.json()
+        return data["choices"][0]["message"]["content"].strip()
+
+    raise RuntimeError("Rate limit exceeded after retries. Wait a minute and try again.")
 
 
 def generate_text(prompt, temperature=0.7, max_tokens=2048):
-    """Generate text from a prompt using Gemini Pro."""
-    model = _get_model()
-    response = model.generate_content(
-        prompt,
-        generation_config=genai.types.GenerationConfig(
-            temperature=temperature,
-            max_output_tokens=max_tokens,
-        ),
+    """Generate text from a prompt."""
+    return _call_openrouter(
+        [{"role": "user", "content": prompt}],
+        temperature=temperature,
+        max_tokens=max_tokens,
     )
-    return response.text.strip()
 
 
 def generate_json(prompt, temperature=0.3, max_tokens=2048):
@@ -125,7 +147,7 @@ Write ONLY the comment text, nothing else."""
 
 
 def parse_resume_text(resume_text):
-    """Extract structured data from resume text using Gemini."""
+    """Extract structured data from resume text."""
     prompt = f"""Extract structured information from this resume.
 
 Resume Text:

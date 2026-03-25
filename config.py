@@ -13,8 +13,9 @@ class Config:
     SECRET_KEY = os.getenv("FLASK_SECRET_KEY", "coldcraft-dev-key")
     DEBUG = os.getenv("FLASK_DEBUG", "true").lower() == "true"
 
-    # Gemini Pro
-    GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+    # OpenRouter
+    OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")
+    OPENROUTER_MODEL = os.getenv("OPENROUTER_MODEL", "google/gemini-2.0-flash-001")
 
     # SMTP
     SMTP_HOST = os.getenv("SMTP_HOST", "smtp.gmail.com")

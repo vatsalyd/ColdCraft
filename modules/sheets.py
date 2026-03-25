@@ -16,12 +16,15 @@ def import_from_csv(file_path_or_stream, source="csv"):
     results = {"imported": 0, "skipped": 0, "errors": []}
 
     if isinstance(file_path_or_stream, str):
-        with open(file_path_or_stream, "r", encoding="utf-8") as f:
+        with open(file_path_or_stream, "r", encoding="utf-8-sig") as f:
             content = f.read()
     else:
         content = file_path_or_stream.read()
         if isinstance(content, bytes):
-            content = content.decode("utf-8")
+            content = content.decode("utf-8-sig")
+
+    # Strip BOM if still present
+    content = content.lstrip("\ufeff")
 
     reader = csv.DictReader(io.StringIO(content))
 
@@ -30,32 +33,47 @@ def import_from_csv(file_path_or_stream, source="csv"):
         results["errors"].append("CSV file appears to be empty or has no headers.")
         return results
 
-    header_map = {}
+    # Build a map: clean_name → original_name (as DictReader keys use originals)
+    original_to_clean = {}
     for h in reader.fieldnames:
-        hl = h.strip().lower().replace(" ", "_")
-        if "company" in hl and "name" not in hl:
-            header_map["company"] = h
-        elif "company" in hl and "name" in hl:
-            header_map["company"] = h
+        clean = h.strip().strip("\ufeff").strip("\x00")
+        original_to_clean[h] = clean
+
+    clean_fields = list(original_to_clean.values())
+    print(f"[ColdCraft] CSV headers detected: {clean_fields}")
+
+    # Map semantic roles to the ORIGINAL header key (what DictReader uses)
+    header_map = {}
+    for original, clean in original_to_clean.items():
+        hl = clean.lower().replace(" ", "_")
+        if "company" in hl:
+            header_map["company"] = original
         elif "website" in hl or "url" in hl or "site" in hl:
-            header_map["website"] = h
+            header_map["website"] = original
         elif "hr" in hl and "name" in hl:
-            header_map["hr_name"] = h
+            header_map["hr_name"] = original
         elif ("hr" in hl and "email" in hl) or ("email" in hl):
-            header_map["hr_email"] = h
+            header_map["hr_email"] = original
+        elif "phone" in hl or "mobile" in hl or "cell" in hl:
+            header_map["phone"] = original
+        elif "name" in hl and "company" not in hl:
+            header_map["hr_name"] = original
         elif "role" in hl or "title" in hl or "position" in hl:
-            header_map["role"] = h
+            header_map["role"] = original
         elif "note" in hl:
-            header_map["notes"] = h
+            header_map["notes"] = original
+
+    print(f"[ColdCraft] Header mapping: {header_map}")
 
     for i, row in enumerate(reader, start=2):
         try:
-            company_name = row.get(header_map.get("company", ""), "").strip()
-            website = row.get(header_map.get("website", ""), "").strip()
-            hr_name = row.get(header_map.get("hr_name", ""), "").strip()
-            hr_email = row.get(header_map.get("hr_email", ""), "").strip()
-            role = row.get(header_map.get("role", ""), "HR").strip() or "HR"
-            notes = row.get(header_map.get("notes", ""), "").strip()
+            company_name = (row.get(header_map.get("company", ""), "") or "").strip()
+            website = (row.get(header_map.get("website", ""), "") or "").strip()
+            hr_name = (row.get(header_map.get("hr_name", ""), "") or "").strip()
+            hr_email = (row.get(header_map.get("hr_email", ""), "") or "").strip()
+            phone = (row.get(header_map.get("phone", ""), "") or "").strip()
+            role = (row.get(header_map.get("role", ""), "") or "").strip() or "HR"
+            notes = (row.get(header_map.get("notes", ""), "") or "").strip()
 
             if not company_name:
                 results["errors"].append(f"Row {i}: Missing company name, skipped.")
@@ -88,9 +106,9 @@ def import_from_csv(file_path_or_stream, source="csv"):
             # Insert contact
             if hr_name or hr_email:
                 execute_db(
-                    """INSERT INTO contacts (name, email, role, company_id, source, notes)
-                    VALUES (?, ?, ?, ?, ?, ?)""",
-                    (hr_name, hr_email, role, company_id, source, notes),
+                    """INSERT INTO contacts (name, email, phone, role, company_id, source, notes)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                    (hr_name, hr_email, phone, role, company_id, source, notes),
                 )
 
             results["imported"] += 1
