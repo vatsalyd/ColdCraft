@@ -44,9 +44,13 @@ def import_from_csv(file_path_or_stream, source="csv"):
 
     # Map semantic roles to the ORIGINAL header key (what DictReader uses)
     header_map = {}
-    for original, clean in original_to_clean.items():
+    for idx, (original, clean) in enumerate(original_to_clean.items()):
         hl = clean.lower().replace(" ", "_")
-        if "company" in hl:
+        if not hl:
+            # Empty header — assume first empty column is company name
+            if "company" not in header_map:
+                header_map["company"] = original
+        elif "company" in hl:
             header_map["company"] = original
         elif "website" in hl or "url" in hl or "site" in hl:
             header_map["website"] = original
@@ -54,7 +58,7 @@ def import_from_csv(file_path_or_stream, source="csv"):
             header_map["hr_name"] = original
         elif ("hr" in hl and "email" in hl) or ("email" in hl):
             header_map["hr_email"] = original
-        elif "phone" in hl or "mobile" in hl or "cell" in hl:
+        elif "phone" in hl or "mobile" in hl or "cell" in hl or "contact" in hl:
             header_map["phone"] = original
         elif "name" in hl and "company" not in hl:
             header_map["hr_name"] = original
